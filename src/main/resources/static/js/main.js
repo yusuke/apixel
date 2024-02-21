@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const stompEndpoint = new URL("./api", window.location.href).href;
     const socket = new SockJS(stompEndpoint);
     const stompClient = Stomp.over(socket);
+    stompClient.reconnect_delay = 1000;
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
         stompClient.subscribe('/topic/highlight', function (message) {
