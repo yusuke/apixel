@@ -1,5 +1,13 @@
+function callHighlightApi(x, y, color) {
+    fetch(`/api/highlight?x=${x}&y=${y}&color=${color}`, {method: 'POST'});
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const table = document.getElementById('table');
+    let isDragging = false;
+    const colors = ["red", "blue", "green", "purple"];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
     for (let y = 0; y < 16; y++) {
         const row = table.insertRow();
         for (let x = 0; x < 16; x++) {
@@ -7,21 +15,46 @@ document.addEventListener('DOMContentLoaded', function () {
             cell.classList.add('cell');
             cell.dataset.x = String(x);
             cell.dataset.y = String(y);
+
+            cell.addEventListener('mousedown', function () {
+                isDragging = true;
+                callHighlightApi(this.dataset.x, this.dataset.y, color);
+            });
+
+            cell.addEventListener('mousemove', function () {
+                if (isDragging) {
+                    callHighlightApi(this.dataset.x, this.dataset.y, color);
+                }
+            });
+
+            cell.addEventListener('touchstart', function (event) {
+                event.preventDefault();
+                isDragging = true;
+                callHighlightApi(this.dataset.x, this.dataset.y, color);
+            }, {passive: false});
+
+            const firstCell = document.querySelector('.cell');
+            const cellWidth = firstCell.offsetWidth;
+            const cellHeight = firstCell.offsetHeight;
+
+            cell.addEventListener('touchmove', function (event) {
+                event.preventDefault();
+                if (isDragging) {
+                    const touch = event.changedTouches[0];
+                    // Get the information for finger #0 
+                    const x = Math.floor(touch.pageX / cellWidth);
+                    const y = Math.floor(touch.pageY / cellHeight);
+                    callHighlightApi(x, y, color);
+                }
+            }, {passive: false});
         }
     }
-    const colors = ["red", "blue", "green", "purple"];
-    const color = colors[Math.floor(Math.random() * colors.length)];
-
-    document.querySelectorAll('.cell').forEach(function (cell) {
-        cell.addEventListener('click', function () {
-            const x = this.dataset.x;
-            const y = this.dataset.y;
-            fetch(`/api/highlight?x=${x}&y=${y}&color=${color}`, {
-                method: 'POST'
-            });
-        });
+    document.addEventListener('mouseup', function () {
+        isDragging = false;
     });
-
+    document.addEventListener('touchend', function () {
+        isDragging = false;
+    });
     function highlightCell(x, y, color) {
         const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if (cell) {
@@ -31,9 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000);
         }
     }
-
     const stompEndpoint = new URL("./api", window.location.href).href;
-    // SockJSとSTOMPクライアントを初期化
     const socket = new SockJS(stompEndpoint);
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
@@ -43,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function () {
             highlightCell(payload.x, payload.y, payload.color);
         });
     });
-
 });
 const apiEndpoint = new URL("./api/highlight", window.location.href).href;
 document.getElementById("endpoint").value = apiEndpoint;
