@@ -1,5 +1,13 @@
+let lastX = -1;
+let lastY = -1;
+
 function callHighlightApi(x, y, color) {
-    fetch(`/api/highlight?x=${x}&y=${y}&color=${color}`, {method: 'POST'});
+    // Checks whether cell has changed
+    if (x !== lastX || y !== lastY) {
+        fetch(`/api/highlight?x=${x}&y=${y}&color=${color}`, {method: 'POST'});
+        lastX = x;
+        lastY = y;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -55,6 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('touchend', function () {
         isDragging = false;
     });
+
     function highlightCell(x, y, color) {
         const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
         if (cell) {
@@ -64,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 1000);
         }
     }
+
     const stompEndpoint = new URL("./api", window.location.href).href;
     const socket = new SockJS(stompEndpoint);
     const stompClient = Stomp.over(socket);
