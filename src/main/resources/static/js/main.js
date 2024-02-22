@@ -5,7 +5,7 @@ function callHighlightApi(x, y, color) {
 document.addEventListener('DOMContentLoaded', function () {
     const table = document.getElementById('table');
     let isDragging = false;
-    const colors = ["red", "blue", "green", "purple"];
+    const colors = ["red", "blue", "green", "purple", "orange", "pink", "cyan", "lime", "magenta", "teal", "navy", "maroon", "olive", "gray"];
     const color = colors[Math.floor(Math.random() * colors.length)];
 
     for (let y = 0; y < 16; y++) {
